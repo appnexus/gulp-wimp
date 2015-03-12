@@ -7,10 +7,6 @@ var reporter = process.argv[7];
 var verbose = process.argv[8];
 
 var Driver = require('./driver');
-var chai = require("chai");
-var chaiAsPromised = require("chai-as-promised");
-chai.use(chaiAsPromised);
-chai.should();
 var Mocha = require('mocha');
 var async = require('async');
 var debug = require('debug')('worker');
@@ -18,7 +14,7 @@ var debug = require('debug')('worker');
 // testing
 var wd = require('wd');
 var isRetry = false;
-
+var colors = require('colors');
 // end testing
 
 var ChildProcessSoftError = require('forq').Errors.ChildProcessSoftError;
@@ -62,11 +58,12 @@ async.series([
         });
 
       var runner = mocha.run(function(failures){
-        console.log("failures", failures);
         var error;
         if (failures > 0 || errors.length > 0) {
+          console.log('FAILED: %s'.red, fileName);
           error = new Error('test failed!');
         } else {
+          console.log('PASSED: %s'.green, fileName);
           error = null;
         }
         // quit browser when tests are done

@@ -10,10 +10,13 @@
     "async": "^0.9.0",
     "colors": "^1.0.3",
     "debug": "^2.1.2",
+    "forq": "0.0.2",
     "gulp": "^3.8.10",
     "gulp-util": "^3.0.4",
     "mocha": "^2.1.0",
-    "through2": "^0.6.3"
+    "selenium-launcher": "^1.1.11",
+    "through2": "^0.6.3",
+    "wd": "^0.3.11"
   },
   "keywords": [
     "gulp",

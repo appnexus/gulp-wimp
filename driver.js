@@ -2,11 +2,7 @@ var wd;
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 
-try {
-  wd = require('wd');
-} catch( err ) {
-  wd = require('../../lib/main');
-}
+wd = require('wd');
 
 function Driver (opts) {
   if (!opts) { opts = {}; }
