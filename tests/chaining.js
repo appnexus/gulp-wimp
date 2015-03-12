@@ -1,30 +1,3 @@
-# gulp-wimp (gulp + webdriver + mocha + parallel)
-
-Run Selenium WebDriver tests faster using parallel, concurrent instances of Mocha.
-
-## Install
-
-npm install gulp
-npm install gulp-wimp
-
-##Usage
-###Basic Gulp Task
-####Gulpfile
-```
-var gulp = require('gulp');
-var wimp = require('gulp-wimp');
-
-gulp.task('test', function () {
-  var s = gulp.src('tests/*.js', {read: false});
-  s.pipe(
-    wimp({
-      concurrency: 3
-    })
-  );
-});
-```
-####Test Files
-```
 var assert = require('assert');
 
 describe('Promise-enabled WebDriver', function () {
@@ -44,4 +17,3 @@ describe('Promise-enabled WebDriver', function () {
   });
 });
 
-```
