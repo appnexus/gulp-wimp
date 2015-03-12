@@ -1,0 +1,27 @@
+{
+  "name": "gulp-wimp",
+  "version": "1.0.0",
+  "description": "gulp plugin for running selenium tests in parallel",
+  "main": "index.js",
+  "scripts": {
+    "test": "gulp test"
+  },
+    "dependencies": {
+    "async": "^0.9.0",
+    "colors": "^1.0.3",
+    "debug": "^2.1.2",
+    "gulp": "^3.8.10",
+    "mocha": "^2.1.0",
+    "through2": "^0.6.3"
+  },
+  "keywords": [
+    "gulp",
+    "selenium",
+    "webdriver",
+    "testing",
+    "parallel",
+    "concurrent"
+  ],
+  "author": "Omar Delarosa",
+  "license": "MIT"
+}
