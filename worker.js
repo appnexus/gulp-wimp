@@ -49,7 +49,7 @@ async.series([
             ctx.config = require(configPath);
             // TODO: remove this
             ctx.c = ctx.config.data;
-            ctx.h = ctx.config.helpers;
+            ctx.s = ctx.config.steps;
             ctx.CSS = ctx.config.selectors;
             ctx.id = Date.now().toString('16');
             ctx.isGulp = true;

@@ -10,7 +10,7 @@ npm install gulp-wimp
 ##Usage
 ###Basic Gulp Task
 ####Gulpfile
-```
+```javascript
 var gulp = require('gulp');
 var wimp = require('gulp-wimp');
 
@@ -24,7 +24,7 @@ gulp.task('test', function () {
 });
 ```
 ####Test Files
-```
+```javascript
 var assert = require('assert');
 
 describe('Promise-enabled WebDriver', function () {
