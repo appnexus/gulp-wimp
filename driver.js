@@ -35,7 +35,6 @@ function Driver (opts) {
   this.verbose = opts.verbose || false;
 
   this.browser.on('status', function(info) {
-    console.log("browser even")
     if (info && info.search('Ending your web drivage') !== -1 ) {
       self.parentProcess.send({
       event: 'browserFinished',
