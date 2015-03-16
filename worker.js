@@ -32,23 +32,31 @@ var d = new Driver({
 
 var browser = d.browser;
 var errors = [];
+var config = {};
+var defaultMochaOpts = {
+  reporter: 'spec'
+};
+
+try {
+  config = require(configPath);
+} catch (e) {
+  debug('No config file found at "' + configPath + '".  Using defaults.');
+}
 
 async.series([
   function(done) {
     
     d.on('ready', function(){
-      var mocha = new Mocha({
-        reporter: 'spec'
-      });
+      var mochaOpts = config.mocha || defaultMochaOpts;
+      var mocha = new Mocha(mochaOpts);
       mocha.addFile(fileName);
-
       mocha.suite
         .on('pre-require', function(ctx, file) {
           ctx.wd = wd;
           ctx.browser = browser;
           // prepare context
           if (configPath) {
-            ctx.config = require(configPath);
+            ctx.config = config;
             // TODO: remove this
             ctx.c = ctx.config.data;
             ctx.s = ctx.config.steps;
@@ -62,10 +70,10 @@ async.series([
       var runner = mocha.run(function(failures){
         var error;
         if (failures > 0 || errors.length > 0) {
-          console.log('FAILED: %s'.red, fileName);
+          debug('FAILED: '.red + fileName);
           error = new Error('test failed!');
         } else {
-          console.log('PASSED: %s'.green, fileName);
+          debug('PASSED: '.green + fileName);
           error = null;
         }
         // quit browser when tests are done

@@ -31,6 +31,11 @@ function launchSelenium (options, parentStream) {
         var callback = options.callback || new Function();
         var concurrency = options.concurrency || 1;
         var browserName = options.browserName;
+        // amount of time to wait after the queue has drained before force killing all tests
+        var killTimeout = options.killTimeout || 60000;
+        var timeoutObj;
+        var maxTimeoutChecks = 5;
+        var timeoutChecks = 0;
         
         workers.forEach(function(w){
           w.args.push(host);
@@ -42,22 +47,17 @@ function launchSelenium (options, parentStream) {
         });
 
         function killSelenium () {
+          if (timeoutObj) {
+            clearTimeout(timeoutObj);
+          }
           selenium.kill();
           if (errors.length > 0) {
-            var wrapped_errors = errors.map(function(err){ 
-              if (!err.message) { err.message = ''; }
-              return new gutil.PluginError('gulp-wmp', err); 
-            })
-            console.log("Errors found:\n");
-            wrapped_errors.forEach(function(er, idx){
-              console.log("Error # %s/%s:", idx+1, errors.length);
-              console.log(er.name);
-              console.log(er.stack);
-            });
-            console.log("FAILED: %s errors encountered".red, errors.length);
+            console.log(("FAILED: "+errors.length+" error"+ (errors.length > 1 ? "s" : "" ) + " encountered.").red, errors.length);
+            callback(errors, F);
             process.exit(1);
           } else {
-            console.log("SUCCESS!".green);
+            console.log("SUCCESS: all tests finished without errors.".green);
+            callback(null, F);
             process.exit(0);
           }
         }
@@ -65,14 +65,29 @@ function launchSelenium (options, parentStream) {
         function killAll () {
           F.forks.forEach(function(f){
             f.terminate();
-          })
+          });
           selenium.kill();
+        }
+
+        function setKillTimeout () {
+          if (timeoutObj) {
+            clearTimeout(timeoutObj);
+          }
+          timeoutObj = setTimeout(function(){
+            timeoutChecks += 1;
+            if ( F.queue.idle() ) {
+              killAll();
+            } else if (timeoutChecks < maxTimeoutChecks) {
+              setKillTimeout();
+            } else {
+              killAll();
+            }
+          }, killTimeout);
         }
 
         function browserEndCallback (){
           this.terminate();
           var nonTerminated = this.pool.forks.filter(function(f){ return !f.terminated; });
-          // TODO add a timeout fail-safe
           if (nonTerminated.length === 0) {
             killSelenium();
           }
@@ -83,11 +98,7 @@ function launchSelenium (options, parentStream) {
           concurrency: concurrency,
           drain: function() {
             debug('queue has been drained.');
-            if (errors.length > 0) {
-              debug('errors have been encountered.');
-            } else {
-              callback();
-            }
+            setKillTimeout();
           },
           events: {
             browserFinished: browserEndCallback
