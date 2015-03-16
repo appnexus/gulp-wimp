@@ -1,8 +1,15 @@
 var wd;
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
-
+var _ = require('lodash');
+var ChildProcessSoftError = require('forq').Errors.ChildProcessSoftError;
 wd = require('wd');
+
+var supportedBrowsers = [
+  'firefox',
+  'chrome',
+  'safari'
+];
 
 function Driver (opts) {
   if (!opts) { opts = {}; }
@@ -16,18 +23,26 @@ function Driver (opts) {
     this.host,
     this.port
   );
+
+  if ( opts.browserName && _.includes(supportedBrowsers, opts.browserName) ) {
+    this.browserName = opts.browserName;
+  } else {
+    this.browserName = undefined;
+  }
+
   this.parentProcess = opts.parentProcess;
 
   this.verbose = opts.verbose || false;
 
   this.browser.on('status', function(info) {
+    console.log("browser even")
     if (info && info.search('Ending your web drivage') !== -1 ) {
       self.parentProcess.send({
       event: 'browserFinished',
         data: {
           info: info
         }
-      })
+      });
     }
   });
 
@@ -39,13 +54,16 @@ function Driver (opts) {
 
   function oninit(err, id, capabilities) {
     if (err) {
-      console.log('error:', err);
+      var e = new ChildProcessSoftError(err);
+      // broadcast browser startup error
+      self.emit('error', e);
+    } else {
+      self.emit('ready');
+      self.status = 'ready';
     }
-    self.emit('ready');
-    self.status = 'ready';
   }
 
-  this.browser.init({}, oninit);
+  this.browser.init({ browserName: this.browserName }, oninit);
 
 }
 

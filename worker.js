@@ -5,6 +5,7 @@ var port = process.argv[5];
 var configPath = process.argv[6] !== 'null' ? process.argv[6] : null;
 var reporter = process.argv[7];
 var verbose = process.argv[8];
+var browserName = process.argv[9];
 
 var Driver = require('./driver');
 var Mocha = require('mocha');
@@ -25,7 +26,8 @@ var d = new Driver({
   parentProcess: process,
   configPath: configPath,
   reporter: reporter,
-  verbose: verbose === 'true' ? true : false
+  verbose: verbose === 'true' ? true : false,
+  browserName: browserName ? browserName : null
 });
 
 var browser = d.browser;
@@ -81,6 +83,14 @@ async.series([
       });
 
     });
+
+  d.on('error', function (err) {
+    // handle browser startup errors
+    browser.quit().then(function(quitErr){
+      done(err);
+    });
+  });
+
   }
 ], function (err) {
   if (err) { throw err; }

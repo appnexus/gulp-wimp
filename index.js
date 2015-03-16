@@ -12,10 +12,10 @@ var colors = require('colors');
 
 function launchSelenium (options, parentStream) {
     return function(){
-      seleniumLauncher(function (er, selenium){
+      seleniumLauncher({ chrome: options.browserName === 'chrome' }, function (er, selenium){
         if (er) {
-          console.log("error starting selenium", er);
           // attempt to kill process
+          throw er;
           selenium.exit();
           return;
         }
@@ -30,6 +30,7 @@ function launchSelenium (options, parentStream) {
         var parentStream = parentStream;
         var callback = options.callback || new Function();
         var concurrency = options.concurrency || 1;
+        var browserName = options.browserName;
         
         workers.forEach(function(w){
           w.args.push(host);
@@ -37,6 +38,7 @@ function launchSelenium (options, parentStream) {
           w.args.push(configPath);
           w.args.push(reporter);
           w.args.push(verbose);
+          w.args.push(browserName);
         });
 
         function killSelenium () {
