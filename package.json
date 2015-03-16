@@ -15,7 +15,7 @@
     "gulp-util": "^3.0.4",
     "lodash": "^3.5.0",
     "mocha": "^2.1.0",
-    "selenium-launcher": "git://github.com:omardelarosa/nodejs-selenium-launcher.git",
+    "selenium-launcher": "git://github.com/omardelarosa/nodejs-selenium-launcher.git",
     "through2": "^0.6.3",
     "wd": "^0.3.11"
   },
