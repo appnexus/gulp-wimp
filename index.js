@@ -31,11 +31,12 @@ function launchSelenium (options, parentStream) {
         var callback = options.callback || new Function();
         var concurrency = options.concurrency || 1;
         var browserName = options.browserName;
-        // amount of time to wait after the queue has drained before force killing all tests
-        var killTimeout = options.killTimeout || 60000;
+        var workerTimeout = options.workerTimeout || 60000;
         var timeoutObj;
         var maxTimeoutChecks = 5;
         var timeoutChecks = 0;
+        // amount of time to wait for entire pool to finish. 10 min default
+        var poolTimeout = options.poolTimeout || 60 * 1000 * 10;
         
         workers.forEach(function(w){
           w.args.push(host);
@@ -44,7 +45,11 @@ function launchSelenium (options, parentStream) {
           w.args.push(reporter);
           w.args.push(verbose);
           w.args.push(browserName);
+          w.killTimeout = workerTimeout;
         });
+
+        // amount of time to wait after the queue has drained before force killing all tests
+        var poolTimeout = options.poolTimeout || (60000 * workers.length) ;
 
         function killSelenium () {
           if (timeoutObj) {
@@ -62,29 +67,6 @@ function launchSelenium (options, parentStream) {
           }
         }
 
-        function killAll () {
-          F.forks.forEach(function(f){
-            f.terminate();
-          });
-          selenium.kill();
-        }
-
-        function setKillTimeout () {
-          if (timeoutObj) {
-            clearTimeout(timeoutObj);
-          }
-          timeoutObj = setTimeout(function(){
-            timeoutChecks += 1;
-            if ( F.queue.idle() ) {
-              killAll();
-            } else if (timeoutChecks < maxTimeoutChecks) {
-              setKillTimeout();
-            } else {
-              killAll();
-            }
-          }, killTimeout);
-        }
-
         function browserEndCallback (){
           this.terminate();
           var nonTerminated = this.pool.forks.filter(function(f){ return !f.terminated; });
@@ -98,8 +80,8 @@ function launchSelenium (options, parentStream) {
           concurrency: concurrency,
           onfinished: function() {
             debug('queue has been drained.');
-            setKillTimeout();
           },
+          killTimeout: poolTimeout,
           events: {
             browserFinished: browserEndCallback
           }

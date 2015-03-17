@@ -61,7 +61,7 @@ async.series([
             ctx.c = ctx.config.data;
             ctx.s = ctx.config.steps;
             ctx.CSS = ctx.config.selectors;
-            ctx.id = Date.now().toString('16');
+            ctx.id = Date.now().toString('16').slice(2);
             ctx.isGulp = true;
             ctx.isRetry = isRetry;
           }
@@ -93,10 +93,16 @@ async.series([
     });
 
   d.on('error', function (err) {
-    // handle browser startup errors
-    browser.quit().then(function(quitErr){
-      done(err);
-    });
+    if (err) {
+      // handle browser startup errors
+      if (err.name === 'Browser Start Error') {
+        console.log("Driver Failed to Start", err);
+        browser.quit();
+      } else {
+      // go easy on more generic, non-fatal errors
+        console.log("Driver Encountered an error: ", err);
+      }
+    }
   });
 
   }
