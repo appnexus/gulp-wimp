@@ -96,7 +96,7 @@ function launchSelenium (options, parentStream) {
         F = new Forq({
           workers: workers,
           concurrency: concurrency,
-          drain: function() {
+          onfinished: function() {
             debug('queue has been drained.');
             setKillTimeout();
           },
