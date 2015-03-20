@@ -1,6 +1,5 @@
-# gulp-wimp (gulp + webdriver + mocha + parallel)
-
-Run Selenium WebDriver tests faster using parallel, concurrent instances of Mocha.
+# gulp-wimp
+Run Selenium WebDriver tests faster using parallel instances of Mocha.
 
 ## Install
 ```bash
