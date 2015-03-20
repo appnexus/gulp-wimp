@@ -4,6 +4,7 @@ var EventEmitter = require('events').EventEmitter;
 var _ = require('lodash');
 var ChildProcessSoftError = require('forq').Errors.ChildProcessSoftError;
 wd = require('wd');
+var colors = require('colors');
 
 var supportedBrowsers = [
   'firefox',
@@ -34,23 +35,16 @@ function Driver (opts) {
 
   this.verbose = opts.verbose || false;
 
-  this.browser.on('status', function(info) {
-    if (info && info.search('Ending your web drivage') !== -1 ) {
-      if (self.parentProcess.connected) {
-        self.parentProcess.send({
-        event: 'browserFinished',
-          data: {
-            info: info
-          }
-        });
-      }
-    }
-  });
-
   if (this.verbose) {
-    this.browser.on('command', function(meth, path, data) {
-      console.log(' > ', meth, path, data);
+    
+    this.browser.on('status', function(info) {
+      console.log(' > ', (info || '').magenta );
     });
+
+    this.browser.on('command', function(meth, path, data) {
+      console.log(' > ', meth.green, path, (data || '').magenta );
+    });
+  
   }
 
   function oninit(err, id, capabilities) {

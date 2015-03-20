@@ -10,6 +10,9 @@ var workers = [];
 var debug = require('debug')('gulp-wmp');
 var colors = require('colors');
 
+var DEFAULT_TEST_END_TIMEOUT = 60000;
+
+
 function launchSelenium (options, parentStream) {
     return function(){
       seleniumLauncher({ chrome: options.browserName === 'chrome' }, function (er, selenium){
@@ -32,7 +35,6 @@ function launchSelenium (options, parentStream) {
         var concurrency = options.concurrency || 1;
         var browserName = options.browserName;
         var workerTimeout = options.workerTimeout || 60000;
-        var timeoutObj;
         var maxTimeoutChecks = 5;
         var timeoutChecks = 0;
         // amount of time to wait for entire pool to finish. 10 min default
@@ -52,9 +54,7 @@ function launchSelenium (options, parentStream) {
         var poolTimeout = options.poolTimeout || (60000 * workers.length) ;
 
         function killSelenium () {
-          if (timeoutObj) {
-            clearTimeout(timeoutObj);
-          }
+          debug('killing selenium');
           selenium.kill();
           if (errors.length > 0) {
             console.log(("FAILED: "+errors.length+" error"+ (errors.length > 1 ? "s" : "" ) + " encountered.").red, errors.length);
@@ -67,24 +67,55 @@ function launchSelenium (options, parentStream) {
           }
         }
 
-        function browserEndCallback (){
-          this.terminate();
-          var nonTerminated = this.pool.forks.filter(function(f){ return !f.terminated; });
-          if (nonTerminated.length === 0) {
-            killSelenium();
-          }
-        }
-
         F = new Forq({
           workers: workers,
           concurrency: concurrency,
           onfinished: function() {
-            debug('queue has been drained.');
+            debug('all tests have finished.');
+            // time drain was triggered
+            var drainTime = Date.now();
+
+            // check for hanging forks
+            var timer = setInterval(function(){
+              // mark current time
+              var now = Date.now();
+              debug('checking for hanging forks: '+now);
+              // collect all connected forks
+              var connected = F.forks.filter(function(f){ return f.connected; });
+              // count non-terminated forks
+              debug('currently connected forks '+connected.length);
+              var activeForks = F.getNumberOfActiveForks();
+              debug('currently active forks '+activeForks);
+              
+              // check if timeout has been reached
+              if ( now - drainTime > DEFAULT_TEST_END_TIMEOUT ) {
+                // if so..
+                debug('wimp timeout reached')
+                // destroy interval
+                clearInterval(timer);
+                //kill forks TODO: use pool.killAll
+                activeForks.forEach(function(f){ f.kill(); });
+                //kill selenium
+                killSelenium();
+
+                // if there are no more active forks, kill selenium 
+              } else if (activeForks === 0 && connected.length === 0) {
+                debug('all forks have terminated and disconnected')
+                killSelenium();
+              }
+              // in all other cases, noop
+            }, 1000);
+
+            // make sure interval is killed if max timeout is reached
+            setTimeout(function(){
+              if (!timer._idleNext) {
+                clearInterval(timer);
+                killSelenium();
+              }
+            }, DEFAULT_TEST_END_TIMEOUT+1000);
+
           },
-          killTimeout: poolTimeout,
-          events: {
-            browserFinished: browserEndCallback
-          }
+          killTimeout: poolTimeout
         });
 
         F.on('error', function(err){

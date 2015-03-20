@@ -10,6 +10,9 @@ describe('A Mocha test run by grunt-mocha-sauce', function () {
 });
 
 describe('A basic Webdriver example', function () {
+
+  this.timeout(10000);
+
   describe('injected browser executing a Google Search', function () {
 
     it('performs as expected', function (done) {

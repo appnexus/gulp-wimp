@@ -2,6 +2,8 @@ var assert = require('assert');
 
 describe('Promise-enabled WebDriver', function () {
 
+  this.timeout(10000);
+
   describe('injected browser executing a Google Search', function () {
 
     it('performs as expected', function (done) {

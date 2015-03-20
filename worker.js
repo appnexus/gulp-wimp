@@ -11,6 +11,7 @@ var Driver = require('./driver');
 var Mocha = require('mocha');
 var async = require('async');
 var debug = require('debug')('worker');
+var DEFAULT_BROWSER_QUIT_TIMEOUT = 60000;
 
 // testing
 var wd = require('wd');
@@ -77,7 +78,15 @@ async.series([
           error = null;
         }
         // quit browser when tests are done
+        var timer = setTimeout(function(){
+          debug('browser failed to quit in '+browserQuitTimeout+'ms');
+          done(new Error('Browser Quit Error'));
+        }, DEFAULT_BROWSER_QUIT_TIMEOUT);
+
         browser.quit().then(function(){
+          // kill the above timer
+          clearTimeout(timer);
+          debug('browser has successfully quit. closing worker');
           done(error);
         });
       });
@@ -108,5 +117,5 @@ async.series([
   }
 ], function (err) {
   if (err) { throw err; }
-  debug('worker callback fired');
+  debug('worker callback fired without firing an error');
 });
