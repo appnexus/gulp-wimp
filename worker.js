@@ -90,7 +90,7 @@ async.series([
         }
         // quit browser when tests are done
         var timer = setTimeout(function(){
-          debug('browser failed to quit in '+browserQuitTimeout+'ms');
+          debug('browser failed to quit in '+DEFAULT_BROWSER_QUIT_TIMEOUT+'ms');
           done(new Error('Browser Quit Error'));
         }, DEFAULT_BROWSER_QUIT_TIMEOUT);
 

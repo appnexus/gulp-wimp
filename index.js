@@ -9,6 +9,7 @@ var Forq = require('forq');
 var workers = [];
 var debug = require('debug')('gulp-wmp');
 var colors = require('colors');
+var _ = require('lodash');
 
 var DEFAULT_TEST_END_TIMEOUT = 60000;
 
@@ -24,6 +25,7 @@ function launchSelenium (options, parentStream) {
         }
 
         var errors = [];
+        var retryWorkers = [];
         var host = selenium.host;
         var port = selenium.port;
         var configPath = options.configPath || null;
@@ -67,10 +69,7 @@ function launchSelenium (options, parentStream) {
           }
         }
 
-        F = new Forq({
-          workers: workers,
-          concurrency: concurrency,
-          onfinished: function() {
+        function onfinishCallback () {
             debug('all tests have finished.');
             // time drain was triggered
             var drainTime = Date.now();
@@ -100,7 +99,7 @@ function launchSelenium (options, parentStream) {
 
                 // if there are no more active forks, kill selenium 
               } else if (activeForks === 0 && connected.length === 0) {
-                debug('all forks have terminated and disconnected')
+                debug('all forks have terminated and disconnected');
                 killSelenium();
               }
               // in all other cases, noop
@@ -113,14 +112,23 @@ function launchSelenium (options, parentStream) {
                 killSelenium();
               }
             }, DEFAULT_TEST_END_TIMEOUT+1000);
+        }
 
-          },
+        F = new Forq({
+          workers: workers,
+          concurrency: concurrency,
+          onfinished: onfinishCallback,
           killTimeout: poolTimeout
         });
 
         F.on('error', function(err){
           // collect errors in array as they occur
           errors.push(err);
+          // collect workers for retry
+          var worker = err.domainEmitter.worker;
+          if ( !_.contains(retryWorkers, worker) ) {
+            retryWorkers.push(worker);
+          }
         });
 
         F.run();
