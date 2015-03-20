@@ -127,6 +127,11 @@ async.series([
 
   }
 ], function (err) {
-  if (err) { throw err; }
-  debug('worker callback fired without firing an error');
+  if (err) {
+    var e = new ChildProcessSoftError(err);
+    errors.push(e);
+    debug('an error occured before exiting fork');
+  } else {
+    debug('worker callback fired without firing an error');
+  }
 });
