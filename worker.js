@@ -12,6 +12,7 @@ var Mocha = require('mocha');
 var async = require('async');
 var debug = require('debug')('worker');
 var DEFAULT_BROWSER_QUIT_TIMEOUT = 60000;
+var DEFAULT_BROWSER_START_TIMEOUT = 60000;
 
 // testing
 var wd = require('wd');
@@ -46,10 +47,20 @@ try {
 
 async.series([
   function(done) {
+
+    // quit browser when tests are done
+    var browserStartTimer = setTimeout(function(){
+      debug('browser failed to start');
+      done(new Error('Browser Start Error'));
+    }, DEFAULT_BROWSER_START_TIMEOUT);
     
     d.on('ready', function(){
       var mochaOpts = config.mocha || defaultMochaOpts;
       var mocha = new Mocha(mochaOpts);
+
+      clearTimeout(browserStartTimer);
+      debug('browser has successfully started. starting mocha');
+
       mocha.addFile(fileName);
       mocha.suite
         .on('pre-require', function(ctx, file) {
