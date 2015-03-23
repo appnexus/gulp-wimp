@@ -160,6 +160,7 @@ function launchSelenium (options, parentStream) {
               passedOnRetry: false
             };
           }
+          console.log("RETRYING: ".yellow.bold+'../'+_.last(testFileName.split('/')));
           resultsByFile[testFileName].errors.push(err);
           // initialize array if none
           if ( retryTests && maxRetries > 0 ) {
@@ -169,12 +170,11 @@ function launchSelenium (options, parentStream) {
             newTasks.push(t);
             F.addTask(t, function(retryErr){
               if (retryErr) {
-                console.log("Retry error", err);
+                debug('encountered error on a retry: '+retryError.message);
               } else {
                 // mark the file as passing on retry
                 resultsByFile[testFileName].passedOnRetry = true;
               }
-              console.log( ("FINISHED RETRY "+currentRetry+"/"+retryLogDenominator).yellow );
             })
             maxRetries -= 1;
 
