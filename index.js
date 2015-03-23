@@ -160,10 +160,10 @@ function launchSelenium (options, parentStream) {
               passedOnRetry: false
             };
           }
-          console.log("RETRYING: ".yellow.bold+'../'+_.last(testFileName.split('/')));
           resultsByFile[testFileName].errors.push(err);
           // initialize array if none
           if ( retryTests && maxRetries > 0 ) {
+            console.log("RETRYING: ".yellow.bold+'../'+_.last(testFileName.split('/')));
             currentRetry += 1;
             var t = new Task(worker, F);
             retryWorkers.push(worker);
