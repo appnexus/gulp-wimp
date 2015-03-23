@@ -7,12 +7,12 @@ var through = require('through2');
 var seleniumLauncher = require('selenium-launcher');
 var Forq = require('forq');
 var workers = [];
+var newTasks = [];
 var debug = require('debug')('gulp-wmp');
 var colors = require('colors');
 var _ = require('lodash');
-
+var Task = require('forq/task');
 var DEFAULT_TEST_END_TIMEOUT = 60000;
-
 
 function launchSelenium (options, parentStream) {
     return function(){
@@ -25,6 +25,7 @@ function launchSelenium (options, parentStream) {
         }
 
         var errors = [];
+        var resultsByFile = {};
         var retryWorkers = [];
         var host = selenium.host;
         var port = selenium.port;
@@ -37,8 +38,16 @@ function launchSelenium (options, parentStream) {
         var concurrency = options.concurrency || 1;
         var browserName = options.browserName;
         var workerTimeout = options.workerTimeout || 60000;
+        // max number of timeouts
         var maxTimeoutChecks = 5;
+        // counter for timeout checks
         var timeoutChecks = 0;
+        // enable retry mode or not
+        var retryTests = options.retryTests || false;
+        // task slots available for retries (aka how many total test retries are allowed)
+        var maxRetries = options.maxRetries || 5;
+        var retryLogDenominator = maxRetries+0;
+        var currentRetry = 0;
         // amount of time to wait for entire pool to finish. 10 min default
         var poolTimeout = options.poolTimeout || 60 * 1000 * 10;
         
@@ -58,10 +67,23 @@ function launchSelenium (options, parentStream) {
         function killSelenium () {
           debug('killing selenium');
           selenium.kill();
-          if (errors.length > 0) {
-            console.log(("FAILED: "+errors.length+" error"+ (errors.length > 1 ? "s" : "" ) + " encountered.").red, errors.length);
-            callback(errors, F);
-            process.exit(1);
+          var failed = false;
+          var numberFailedAfterRetry = 0;
+          // TODO: create an option function for determining if tests passed or not
+          if (retryTests) {
+            numberFailedAfterRetry = _.where(resultsByFile, { passedOnRetry: false });
+            if (numberFailedAfterRetry.length > 0) {
+              failed = true;
+            } 
+          } else if (!retryTests && errors.length > 0) {
+            failed = true;
+          }
+
+          if (failed) {
+            // determine if tests passed on retries
+              console.log(("FAILED: "+errors.length+" error"+ (errors.length > 1 ? "s" : "" ) + " encountered.").red, errors.length);
+              callback(resultsByFile, F);
+              process.exit(1);
           } else {
             console.log("SUCCESS: all tests finished without errors.".green);
             callback(null, F);
@@ -73,7 +95,6 @@ function launchSelenium (options, parentStream) {
             debug('all tests have finished.');
             // time drain was triggered
             var drainTime = Date.now();
-
             // check for hanging forks
             var timer = setInterval(function(){
               // mark current time
@@ -85,7 +106,10 @@ function launchSelenium (options, parentStream) {
               debug('currently connected forks '+connected.length);
               var activeForks = F.getNumberOfActiveForks();
               debug('currently active forks '+activeForks);
-              
+              // count pending tasks
+              var pendingTasks = newTasks.filter(function(t){ return !t.completed; }).length;
+              debug('currently pending tasks '+pendingTasks);
+
               // check if timeout has been reached
               if ( now - drainTime > DEFAULT_TEST_END_TIMEOUT ) {
                 // if so..
@@ -98,7 +122,7 @@ function launchSelenium (options, parentStream) {
                 killSelenium();
 
                 // if there are no more active forks, kill selenium 
-              } else if (activeForks === 0 && connected.length === 0) {
+              } else if (pendingTasks === 0 && activeForks === 0 && connected.length === 0) {
                 debug('all forks have terminated and disconnected');
                 killSelenium();
               }
@@ -121,13 +145,39 @@ function launchSelenium (options, parentStream) {
           killTimeout: poolTimeout
         });
 
-        F.on('error', function(err){
+        F.on('error', function(err, fork){
           // collect errors in array as they occur
           errors.push(err);
           // collect workers for retry
           var worker = err.domainEmitter.worker;
-          if ( !_.contains(retryWorkers, worker) ) {
+          // add error to hash map of errors by file
+          var testFileName = worker.args[1];
+          // 
+          if (!resultsByFile[testFileName]) {
+            resultsByFile[testFileName] = {
+              errors: [],
+              retryErrors: [],
+              passedOnRetry: false
+            };
+          }
+          resultsByFile[testFileName].errors.push(err);
+          // initialize array if none
+          if ( retryTests && maxRetries > 0 ) {
+            currentRetry += 1;
+            var t = new Task(worker, F);
             retryWorkers.push(worker);
+            newTasks.push(t);
+            F.addTask(t, function(retryErr){
+              if (retryErr) {
+                console.log("Retry error", err);
+              } else {
+                // mark the file as passing on retry
+                resultsByFile[testFileName].passedOnRetry = true;
+              }
+              console.log( ("FINISHED RETRY "+currentRetry+"/"+retryLogDenominator).yellow );
+            })
+            maxRetries -= 1;
+
           }
         });
 
