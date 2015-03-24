@@ -161,19 +161,13 @@ function launchSelenium (options, parentStream) {
           }
           resultsByFile[testFileName].errors.push(err);
           // initialize array if none
-
-          // TODO: determine if file is already queued before scheduling for retry
-          function isFileQueued (fileName) {
-            // is the test file in the newTasks queue and not yet completed? 
-            return _.filter(newTasks, function(t) { t.testFileName === fileName && !t.completed; }).length === 0;
-          }
-
-          if ( retryTests && maxRetries > 0 ) {
+          
+          // if retryTest AND maxRetries are remaining AND no task with the same parentForkId exists in queue already
+          if ( retryTests && maxRetries > 0 && _.filter(newTasks, function(t) { t.parentForkId === id; }).length === 0 ) {
             console.log("RETRYING: ".yellow.bold+'../'+_.last(testFileName.split('/')));
             currentRetry += 1;
             var t = new Task(worker, F);
-            t.worker = worker;
-            t.testFileName = testFileName;
+            t.parentForkId = fork.id;
             newTasks.push(t);
             F.addTask(t, function(retryErr){
               if (retryErr) {
