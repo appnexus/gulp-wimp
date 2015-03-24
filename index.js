@@ -26,7 +26,6 @@ function launchSelenium (options, parentStream) {
 
         var errors = [];
         var resultsByFile = {};
-        var retryWorkers = [];
         var host = selenium.host;
         var port = selenium.port;
         var configPath = options.configPath || null;
@@ -162,11 +161,19 @@ function launchSelenium (options, parentStream) {
           }
           resultsByFile[testFileName].errors.push(err);
           // initialize array if none
+
+          // TODO: determine if file is already queued before scheduling for retry
+          function isFileQueued (fileName) {
+            // is the test file in the newTasks queue and not yet completed? 
+            return _.filter(newTasks, function(t) { t.testFileName === fileName && !t.completed; }).length === 0;
+          }
+
           if ( retryTests && maxRetries > 0 ) {
             console.log("RETRYING: ".yellow.bold+'../'+_.last(testFileName.split('/')));
             currentRetry += 1;
             var t = new Task(worker, F);
-            retryWorkers.push(worker);
+            t.worker = worker;
+            t.testFileName = testFileName;
             newTasks.push(t);
             F.addTask(t, function(retryErr){
               if (retryErr) {
