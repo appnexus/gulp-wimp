@@ -7,7 +7,7 @@ var through = require('through2');
 var seleniumLauncher = require('selenium-launcher');
 var Forq = require('forq');
 var workers = [];
-var newTasks = [];
+var scheduledRetries = [];
 var debug = require('debug')('gulp-wmp');
 var colors = require('colors');
 var _ = require('lodash');
@@ -106,7 +106,7 @@ function launchSelenium (options, parentStream) {
               var activeForks = F.getNumberOfActiveForks();
               debug('currently active forks '+activeForks);
               // count pending tasks
-              var pendingTasks = newTasks.filter(function(t){ return !t.completed; }).length;
+              var pendingTasks = scheduledRetries.filter(function(t){ return !t.completed; }).length;
               debug('currently pending tasks '+pendingTasks);
 
               // check if timeout has been reached
@@ -162,23 +162,29 @@ function launchSelenium (options, parentStream) {
           resultsByFile[testFileName].errors.push(err);
           // initialize array if none
           
-          // if retryTest AND maxRetries are remaining AND no task with the same parentForkId exists in queue already
-          if ( retryTests && maxRetries > 0 && _.filter(newTasks, function(t) { t.parentForkId === id; }).length === 0 ) {
+          // if retryTest AND maxRetries are remaining AND no task with the same parentTaskForkId exists in queue already
+          if ( retryTests && maxRetries > 0 && scheduledRetries.filter(function(t){ return t.parentTaskForkId === fork.id; }).length === 0 ) {
+            // go ahead and schedule the retry
             console.log("RETRYING: ".yellow.bold+'../'+_.last(testFileName.split('/')));
+            // de/increment counters
             currentRetry += 1;
+            maxRetries -= 1;
+            // instantiate task
             var t = new Task(worker, F);
-            t.parentForkId = fork.id;
-            newTasks.push(t);
+            // log 
+            t.parentTaskForkId = fork.id;
+            scheduledRetries.push(t);
             F.addTask(t, function(retryErr){
-              if (retryErr) {
-                debug('encountered error on a retry: '+retryError.message);
+              if (F.errors[this.id].length > 0 || retryErr) {
+                debug('encountered error on a retry');
               } else {
                 // mark the file as passing on retry
                 resultsByFile[testFileName].passedOnRetry = true;
+                // remove t from scheduled retries after it passes;
+                // scheduledRetries = _.without(scheduledRetries, t);
               }
             })
-            maxRetries -= 1;
-
+            
           }
         });
 
