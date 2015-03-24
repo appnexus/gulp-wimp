@@ -50,8 +50,10 @@ async.series([
 
     // quit browser when tests are done
     var browserStartTimer = setTimeout(function(){
-      debug('browser failed to start');
-      done(new Error('Browser Start Error'));
+      console.log(('warning: browser failed to start in '+DEFAULT_BROWSER_QUIT_TIMEOUT+'ms').red);
+      done();
+      // TODO: implement this
+      // done(new Error('Browser Start Error'));
     }, DEFAULT_BROWSER_START_TIMEOUT);
     
     d.on('ready', function(){
@@ -90,8 +92,10 @@ async.series([
         }
         // quit browser when tests are done
         var timer = setTimeout(function(){
-          debug('browser failed to quit in '+DEFAULT_BROWSER_QUIT_TIMEOUT+'ms');
-          done(new Error('Browser Quit Error'));
+          console.log(('warning: browser failed to quit in '+DEFAULT_BROWSER_QUIT_TIMEOUT+'ms').red);
+          done();
+          // TODO: implement a specific error type for this
+          // done(new Error('Browser Quit Error'));
         }, DEFAULT_BROWSER_QUIT_TIMEOUT);
 
         browser.quit().then(function(){

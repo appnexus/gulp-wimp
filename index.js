@@ -81,7 +81,7 @@ function launchSelenium (options, parentStream) {
 
           if (failed) {
             // determine if tests passed on retries
-              console.log(("FAILED: "+errors.length+" error"+ (errors.length > 1 ? "s" : "" ) + " encountered.").red, errors.length);
+              console.log(("FAILED: "+errors.length+" error"+ (errors.length > 1 ? "s" : "" ) + " encountered.").red);
               callback(resultsByFile, F);
               process.exit(1);
           } else {
