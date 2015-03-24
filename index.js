@@ -49,7 +49,7 @@ function launchSelenium (options, parentStream) {
         var currentRetry = 0;
         // amount of time to wait for entire pool to finish. 10 min default
         var poolTimeout = options.poolTimeout || 60 * 1000 * 10;
-        
+        console.log("Loading %s test suite files...", workers.length);
         workers.forEach(function(w){
           w.args.push(host);
           w.args.push(port);
@@ -160,8 +160,7 @@ function launchSelenium (options, parentStream) {
             };
           }
           resultsByFile[testFileName].errors.push(err);
-          // initialize array if none
-          
+
           // if retryTest AND maxRetries are remaining AND no task with the same parentTaskForkId exists in queue already
           if ( retryTests && maxRetries > 0 && scheduledRetries.filter(function(t){ return t.parentTaskForkId === fork.id; }).length === 0 ) {
             // go ahead and schedule the retry
@@ -184,8 +183,8 @@ function launchSelenium (options, parentStream) {
                 // scheduledRetries = _.without(scheduledRetries, t);
               }
             })
-            
           }
+
         });
 
         F.run();
