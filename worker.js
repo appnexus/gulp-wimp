@@ -49,12 +49,7 @@ async.series([
   function(done) {
 
     // quit browser when tests are done
-    var browserStartTimer = setTimeout(function(){
-      console.log(('warning: browser failed to start in '+DEFAULT_BROWSER_QUIT_TIMEOUT+'ms').red);
-      done();
-      // TODO: implement this
-      // done(new Error('Browser Start Error'));
-    }, DEFAULT_BROWSER_START_TIMEOUT);
+    var browserStartTimer;
     
     d.on('ready', function(){
       var mochaOpts = config.mocha || defaultMochaOpts;
@@ -70,6 +65,14 @@ async.series([
       mocha.addFile(fileName);
       mocha.suite
         .on('pre-require', function(ctx, file) {
+
+          browserStartTimer = setTimeout(function(){
+            console.log(('warning: browser failed to start in '+DEFAULT_BROWSER_QUIT_TIMEOUT+'ms').red);
+            done();
+            // TODO: implement this
+            // done(new Error('Browser Start Error'));
+          }, 15000);
+
           ctx.wd = wd;
           ctx.browser = browser;
           // prepare context
