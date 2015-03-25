@@ -59,7 +59,11 @@ async.series([
     d.on('ready', function(){
       var mochaOpts = config.mocha || defaultMochaOpts;
       var mocha = new Mocha(mochaOpts);
+      var started = false;
+      var startTimer;
+      var runner;
 
+      debug('preparing mocha for test file', fileName);
       clearTimeout(browserStartTimer);
       debug('browser has successfully started. starting mocha');
 
@@ -81,7 +85,15 @@ async.series([
           }
         });
 
-      var runner = mocha.run(function(failures){
+      setTimeout(function(){
+        if (!started) {
+          console.log(("mocha test "+fileName+"failed to start").red);
+          browser.quit();
+          done(new Error('mocha test failed to start'));
+        }
+      }, DEFAULT_BROWSER_START_TIMEOUT );
+
+      runner = mocha.run(function(failures){
         var error;
         if (failures > 0 || errors.length > 0) {
           debug('FAILED: '.red + fileName);
@@ -106,6 +118,12 @@ async.series([
         });
       });
 
+      runner.on('suite', function(){
+        clearTimeout(startTimer);
+        started = true;
+        debug("suite started");
+      })
+
       runner.on('fail', function(ctx, err){
         if (err) {
           new ChildProcessSoftError(err);
@@ -120,8 +138,8 @@ async.series([
     if (err) {
       // handle browser startup errors
       if (err.name === 'Browser Start Error') {
-        console.log("Driver Failed to Start", err);
-        browser.quit();
+        var e = new ChildProcessSoftError(err);
+        errors.push(e);
       } else {
       // go easy on more generic, non-fatal errors
         console.log("Driver Encountered an error: ", err);
