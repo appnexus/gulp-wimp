@@ -71,7 +71,7 @@ async.series([
             done();
             // TODO: implement this
             // done(new Error('Browser Start Error'));
-          }, 15000);
+          }, DEFAULT_BROWSER_START_TIMEOUT);
 
           ctx.wd = wd;
           ctx.browser = browser;
