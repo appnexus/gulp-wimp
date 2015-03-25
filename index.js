@@ -182,7 +182,7 @@ function launchSelenium (options, parentStream) {
                 // remove t from scheduled retries after it passes;
                 // scheduledRetries = _.without(scheduledRetries, t);
               }
-            })
+            });
           }
 
         });
