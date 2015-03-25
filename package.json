@@ -10,7 +10,7 @@
     "async": "^0.9.0",
     "colors": "^1.0.3",
     "debug": "^2.1.2",
-    "forq": "git://github.com/omardelarosa/forq.git#v0.0.6",
+    "forq": "^0.0.6",
     "gulp": "^3.8.10",
     "gulp-util": "^3.0.4",
     "lodash": "^3.5.0",
