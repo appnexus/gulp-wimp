@@ -1,6 +1,6 @@
 {
   "name": "gulp-wimp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "gulp plugin for running selenium tests in parallel",
   "main": "index.js",
   "scripts": {

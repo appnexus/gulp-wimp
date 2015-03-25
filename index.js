@@ -8,7 +8,7 @@ var seleniumLauncher = require('selenium-launcher');
 var Forq = require('forq');
 var workers = [];
 var scheduledRetries = [];
-var debug = require('debug')('gulp-wmp');
+var debug = require('debug')('gulp-wimp');
 var colors = require('colors');
 var _ = require('lodash');
 var Task = require('forq/task');
@@ -106,7 +106,7 @@ function launchSelenium (options, parentStream) {
               var activeForks = F.getNumberOfActiveForks();
               debug('currently active forks '+activeForks);
               // count pending tasks
-              var pendingTasks = scheduledRetries.filter(function(t){ return !t.completed; }).length;
+              var pendingTasks = F.getNumberOfPendingTasks();
               debug('currently pending tasks '+pendingTasks);
 
               // check if timeout has been reached
@@ -121,7 +121,7 @@ function launchSelenium (options, parentStream) {
                 killSelenium();
 
                 // if there are no more active forks, kill selenium 
-              } else if (pendingTasks === 0 && activeForks === 0 && connected.length === 0) {
+              } else if (F.queue.idle() && pendingTasks === 0 && activeForks === 0 && connected.length === 0) {
                 debug('all forks have terminated and disconnected');
                 killSelenium();
               }
