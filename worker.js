@@ -51,6 +51,13 @@ async.series([
     // quit browser when tests are done
     var browserStartTimer;
     
+    browserStartTimer = setTimeout(function(){
+      console.log(('warning: browser failed to start in '+DEFAULT_BROWSER_QUIT_TIMEOUT+'ms').red);
+      done();
+      // TODO: implement this
+      // done(new Error('Browser Start Error'));
+    }, DEFAULT_BROWSER_START_TIMEOUT);
+
     d.on('ready', function(){
       var mochaOpts = config.mocha || defaultMochaOpts;
       var mocha = new Mocha(mochaOpts);
@@ -66,12 +73,13 @@ async.series([
       mocha.suite
         .on('pre-require', function(ctx, file) {
 
-          browserStartTimer = setTimeout(function(){
-            console.log(('warning: browser failed to start in '+DEFAULT_BROWSER_QUIT_TIMEOUT+'ms').red);
-            done();
-            // TODO: implement this
-            // done(new Error('Browser Start Error'));
-          }, DEFAULT_BROWSER_START_TIMEOUT);
+          startTimer = setTimeout(function(){
+            if (!started) {
+              console.log(("mocha test "+fileName+" failed to start").red);
+              browser.quit();
+              done(new Error('mocha test failed to start'));
+            }
+          }, DEFAULT_BROWSER_START_TIMEOUT );
 
           ctx.wd = wd;
           ctx.browser = browser;
@@ -88,13 +96,7 @@ async.series([
           }
         });
 
-      setTimeout(function(){
-        if (!started) {
-          console.log(("mocha test "+fileName+"failed to start").red);
-          browser.quit();
-          done(new Error('mocha test failed to start'));
-        }
-      }, DEFAULT_BROWSER_START_TIMEOUT );
+
 
       runner = mocha.run(function(failures){
         var error;
