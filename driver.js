@@ -60,7 +60,7 @@ function Driver (opts) {
   }
 
   this.browser.init({ browserName: this.browserName }, oninit);
-
+  this.browser._wd = wd;
 }
 
 util.inherits(Driver, EventEmitter);
