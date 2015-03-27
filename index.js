@@ -146,7 +146,6 @@ function launchSelenium (options, parentStream) {
           // collect errors in array as they occur
           errors.push(err);
           // collect tasks for retry
-          console.log("DE", err.domainEmitter);
           var work = err.domainEmitter.work;
           // add error to hash map of errors by file
           var testFileName = work.args[1];
