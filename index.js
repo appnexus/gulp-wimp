@@ -137,6 +137,7 @@ function launchSelenium (options, parentStream) {
 
         F = new Forq({
           todo: tasks,
+          noLimits: true,
           concurrency: concurrency,
           onfinished: onfinishCallback,
           killTimeout: queueTimeout
