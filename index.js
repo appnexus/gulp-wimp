@@ -6,7 +6,7 @@ var gulp = require('gulp');
 var through = require('through2');
 var seleniumLauncher = require('selenium-launcher');
 var Forq = require('forq');
-var workers = [];
+var tasks = [];
 var scheduledRetries = [];
 var debug = require('debug')('gulp-wimp');
 var colors = require('colors');
@@ -36,7 +36,7 @@ function launchSelenium (options, parentStream) {
         var callback = options.callback || new Function();
         var concurrency = options.concurrency || 1;
         var browserName = options.browserName;
-        var workerTimeout = options.workerTimeout || 60000;
+        var taskTimeout = options.taskTimeout || 60000;
         // max number of timeouts
         var maxTimeoutChecks = 5;
         // counter for timeout checks
@@ -47,21 +47,19 @@ function launchSelenium (options, parentStream) {
         var maxRetries = options.maxRetries || 5;
         var retryLogDenominator = maxRetries+0;
         var currentRetry = 0;
-        // amount of time to wait for entire pool to finish. 10 min default
-        var poolTimeout = options.poolTimeout || 60 * 1000 * 10;
-        console.log("Loading %s test suite files...", workers.length);
-        workers.forEach(function(w){
-          w.args.push(host);
-          w.args.push(port);
-          w.args.push(configPath);
-          w.args.push(reporter);
-          w.args.push(verbose);
-          w.args.push(browserName);
-          w.killTimeout = workerTimeout;
+        console.log("Loading %s test suite files...", tasks.length);
+        tasks.forEach(function(t){
+          t.args.push(host);
+          t.args.push(port);
+          t.args.push(configPath);
+          t.args.push(reporter);
+          t.args.push(verbose);
+          t.args.push(browserName);
+          t.killTimeout = taskTimeout;
         });
 
         // amount of time to wait after the queue has drained before force killing all tests
-        var poolTimeout = options.poolTimeout || (60000 * workers.length) ;
+        var queueTimeout = options.queueTimeout || (60000 * tasks.length) ;
 
         function killSelenium () {
           debug('killing selenium');
@@ -115,13 +113,13 @@ function launchSelenium (options, parentStream) {
                 debug('wimp timeout reached')
                 // destroy interval
                 clearInterval(timer);
-                //kill forks TODO: use pool.killAll
+                //kill forks TODO: use queue.killAll
                 activeForks.forEach(function(f){ f.kill(); });
                 //kill selenium
                 killSelenium();
 
                 // if there are no more active forks, kill selenium 
-              } else if (F.queue.idle() && pendingTasks === 0 && activeForks === 0 && connected.length === 0) {
+              } else if (F.idle() && pendingTasks === 0 && activeForks === 0 && connected.length === 0) {
                 debug('all forks have terminated and disconnected');
                 killSelenium();
               }
@@ -138,19 +136,20 @@ function launchSelenium (options, parentStream) {
         }
 
         F = new Forq({
-          workers: workers,
+          todo: tasks,
           concurrency: concurrency,
           onfinished: onfinishCallback,
-          killTimeout: poolTimeout
+          killTimeout: queueTimeout
         });
 
         F.on('error', function(err, fork){
           // collect errors in array as they occur
           errors.push(err);
-          // collect workers for retry
-          var worker = err.domainEmitter.worker;
+          // collect tasks for retry
+          console.log("DE", err.domainEmitter);
+          var work = err.domainEmitter.work;
           // add error to hash map of errors by file
-          var testFileName = worker.args[1];
+          var testFileName = work.args[1];
           // 
           if (!resultsByFile[testFileName]) {
             resultsByFile[testFileName] = {
@@ -169,7 +168,7 @@ function launchSelenium (options, parentStream) {
             currentRetry += 1;
             maxRetries -= 1;
             // instantiate task
-            var t = new Task(worker, F);
+            var t = new Task(work, F);
             // log 
             t.parentTaskForkId = fork.id;
             scheduledRetries.push(t);
@@ -199,7 +198,7 @@ module.exports = function (options) {
   // process the file stream passed in by gulp
   var parentStream = through.obj(function(chunk, enc, cb) {
     var fileName = chunk.path || 'no-name';
-    workers.push({
+    tasks.push({
       path: path.join(__dirname, 'worker'),
       args: [ '-f', fileName  ],
       description: fileName
