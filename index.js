@@ -22,18 +22,18 @@ var drivers = {
   }
 }
 
-var seleniumVersion = '2.45.0'
+var seleniumVersion = '2.45.0';
 
 function launchSelenium (options, parentStream) {
     return function(){
       seleniumStandalone.install({
-        version: '2.45.0',
+        version: seleniumVersion,
         drivers: drivers,
         logger: function(message) {
           console.log(message)
         },
         progressCb: function(totalLength, progressLength, chunkLength) {
-          console.log("progress", totalLength/progressLength)
+          // TODO
         }
       }, function(err) {
         if (err) {
@@ -48,11 +48,8 @@ function launchSelenium (options, parentStream) {
             selenium.exit();
             return;
           }
-          console.log("SELENIUM", selenium)
           var errors = [];
           var resultsByFile = {};
-          // var host = selenium.host;
-          // var port = selenium.port;
           var host = '0.0.0.0';
           var port = 4444;
           var configPath = options.configPath || null;
