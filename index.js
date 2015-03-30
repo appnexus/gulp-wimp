@@ -86,7 +86,7 @@ function seleniumStartCallback (options, parentStream){
       t.killTimeout = taskTimeout;
     });
 
-    if (!seleniumVerbose) {
+    if (seleniumVerbose) {
       selenium.stderr.on('data', function(data){
         console.log(data.toString().gray);
       });
