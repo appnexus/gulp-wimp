@@ -127,7 +127,7 @@ async.series([
         clearTimeout(startTimer);
         started = true;
         debug("suite started");
-      })
+      });
 
       runner.on('fail', function(ctx, err){
         if (err) {

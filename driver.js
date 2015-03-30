@@ -49,7 +49,7 @@ function Driver (opts) {
 
   function oninit(err, id, capabilities) {
     if (err) {
-      err.name = 'Browser Start Error'
+      err.name = 'Browser Start Error';
       var e = new ChildProcessSoftError(err);
       // broadcast browser startup error
       self.emit('error', e);
