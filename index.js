@@ -31,7 +31,6 @@ function seleniumInstallCallback (options, parentStream) {
  return function(err) {
       if (err) { throw err; }
       freeport(function(err, port) {
-        console.log("OPTS", options.selenium)
         if (err) { throw err; }
           var seleniumArgs = [
           '-port', port,
@@ -60,7 +59,6 @@ function seleniumStartCallback (options, parentStream){
     }
     // custom selenium options
     var seleniumOpts = options.selenium || {};
-    console.log("S OPTS", seleniumOpts);
     var errors = [];
     var resultsByFile = {};
     var host = seleniumOpts.host || '0.0.0.0';
