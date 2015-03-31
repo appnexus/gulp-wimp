@@ -19,7 +19,7 @@
     "lodash": "^3.5.0",
     "mocha": "^2.1.0",
     "selenium-launcher": "git://github.com/omardelarosa/nodejs-selenium-launcher.git",
-    "selenium-standalone": "^4.2.2",
+    "selenium-standalone": "git://github.com/omardelarosa/selenium-standalone.git#dev",
     "through2": "^0.6.3",
     "wd": "^0.3.11"
   },
