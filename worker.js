@@ -6,6 +6,7 @@ var configPath = process.argv[6] !== 'null' ? process.argv[6] : null;
 var reporter = process.argv[7];
 var verbose = process.argv[8];
 var browserName = process.argv[9];
+var quit = process.argv[10] === 'true' ? true : false
 
 var Driver = require('./driver');
 var Mocha = require('mocha');
@@ -115,12 +116,20 @@ async.series([
           // done(new Error('Browser Quit Error'));
         }, DEFAULT_BROWSER_QUIT_TIMEOUT);
 
-        browser.quit().then(function(){
-          // kill the above timer
+        if (!quit) {
           clearTimeout(timer);
           debug('browser has successfully quit. closing worker');
           done(error);
-        });
+        } else {
+          browser.quit().then(function(){
+            // kill the above timer
+            clearTimeout(timer);
+            debug('browser has successfully quit. closing worker');
+            done(error);
+          });
+        }
+
+
       });
 
       runner.on('suite', function(){

@@ -36,7 +36,8 @@ function seleniumInstallCallback (options, parentStream) {
         seleniumStandalone.start({ 
           drivers: drivers,
           seleniumArgs: [
-            '-port', port
+            '-port', port,
+            '-timeout', '120'
           ]
         }, seleniumStartCallback(options, parentStream) );
     });
@@ -75,6 +76,7 @@ function seleniumStartCallback (options, parentStream){
     var maxRetries = options.maxRetries || 5;
     var retryLogDenominator = maxRetries+0;
     var currentRetry = 0;
+    var quit = options.quit || true;
     console.log("Loading %s test suite files...", tasks.length);
     tasks.forEach(function(t){
       t.args.push(host);
@@ -83,6 +85,7 @@ function seleniumStartCallback (options, parentStream){
       t.args.push(reporter);
       t.args.push(verbose);
       t.args.push(browserName);
+      t.args.push(quit);
       t.killTimeout = taskTimeout;
     });
 
