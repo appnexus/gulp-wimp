@@ -31,15 +31,21 @@ function seleniumInstallCallback (options, parentStream) {
  return function(err) {
       if (err) { throw err; }
       freeport(function(err, port) {
+        console.log("OPTS", options.selenium)
         if (err) { throw err; }
+          var seleniumArgs = [
+          '-port', port,
+          '-timeout', '120'
+        ];
+        // if there are custom args and one of them is a port number
+        if (options.selenium && options.selenium.args) {
+          seleniumArgs = options.selenium.args;
+        }
         seleniumPort = port;
         seleniumStandalone.start({ 
           drivers: drivers,
-          seleniumArgs: [
-            '-port', port,
-            '-timeout', '120'
-          ]
-        }, seleniumStartCallback(options, parentStream) );
+          seleniumArgs: seleniumArgs
+        }, seleniumStartCallback(options, parentStream));
     });
   };
 }
@@ -52,10 +58,13 @@ function seleniumStartCallback (options, parentStream){
       console.log("Error starting selenium", er);
       throw er;
     }
+    // custom selenium options
+    var seleniumOpts = options.selenium || {};
+    console.log("S OPTS", seleniumOpts);
     var errors = [];
     var resultsByFile = {};
-    var host = '0.0.0.0';
-    var port = seleniumPort;
+    var host = seleniumOpts.host || '0.0.0.0';
+    var port = seleniumOpts.port || seleniumPort;
     var configPath = options.configPath || null;
     var reporter = options.reporter || 'spec';
     var verbose = options.verbose || false;
