@@ -19,7 +19,7 @@ var seleniumPort;
 
 var drivers = {
   chrome: {
-    version: '2.14',
+    version: '2.15',
     arch: process.arch,
     baseURL: 'http://chromedriver.storage.googleapis.com'
   }
