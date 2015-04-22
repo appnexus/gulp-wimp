@@ -53,8 +53,8 @@ function seleniumStartCallback (options, parentStream){
   return function (er, selenium) {
     if (er) {
       // attempt to kill process
-      selenium.exit();
       console.log("Error starting selenium", er);
+      if ( selenium && selenium.exit ) { selenium.exit(); }
       throw er;
     }
     // custom selenium options
