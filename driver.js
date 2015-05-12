@@ -17,7 +17,7 @@ function Driver (opts) {
   var self = this;
   
   EventEmitter.call(this);
-
+  this._opts = opts;
   this.host = opts.host;
   this.port = opts.port;
   this.browser = wd.promiseChainRemote(

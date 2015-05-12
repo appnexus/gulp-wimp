@@ -53,7 +53,9 @@ async.series([
     var browserStartTimer;
     
     browserStartTimer = setTimeout(function(){
-      console.log(('warning: browser failed to start in '+DEFAULT_BROWSER_QUIT_TIMEOUT+'ms').red);
+      if (d.verbose) {
+        console.log(('warning: browser failed to start in '+DEFAULT_BROWSER_QUIT_TIMEOUT+'ms').red);
+      }
       done();
       // TODO: implement this
       // done(new Error('Browser Start Error'));

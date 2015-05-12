@@ -20,7 +20,7 @@ describe('Gulp WIMP', function(){
             spy,
             proxy,
             queue,
-            error,
+            results,
             numberOfTestFiles = 0,
             testsPath = path.join(__dirname, './fixtures/*.js'),
             wimpOptions = {
@@ -49,8 +49,11 @@ describe('Gulp WIMP', function(){
                 fileStream.addListener('data', function(){
                     numberOfTestFiles += 1;
                 });
-                wimpOptions.callback = function(err, fork) {
-                    if (err) { return done(err); }
+                wimpOptions.callback = function(resultsByFile, forq) {
+                    if (resultsByFile) { 
+                        console.log(resultsByFile);
+                        return done(new Error('Errors were found'));
+                    }
                     callbackArgs = arguments;
                     proxy();
                     done();
@@ -65,9 +68,9 @@ describe('Gulp WIMP', function(){
             expect(callbackArgs.length).to.eq(2);
         });
 
-        it('the first argument of the wimp callback should be "null" when there is no error', function(){
-            error = callbackArgs[0];
-            expect(error).to.eq(null);
+        it('the first argument of the wimp callback should be "null" when there are no errors', function(){
+            results = callbackArgs[0];
+            expect(results).to.eq(null);
         });
 
         it('the second argument is an instance of a Forq queue', function(){
@@ -87,16 +90,65 @@ describe('Gulp WIMP', function(){
             expect(queue.concurrencyLimit).to.eq(wimpOptions.concurrency);
         });
 
-        xit("should")
-
     });
 
-    xdescribe('Options', function(){
+    describe('When there are failed tests and retries are enabled', function(){
 
-        xit('runs with default options when no parameters are passed in', function(done){
+        this.timeout(120000);
 
+        var fileStream,
+            wimpStream,
+            callbackArgs,
+            spy,
+            proxy,
+            queue,
+            results,
+            numberOfTestFiles = 0,
+            testsPath = path.join(__dirname, './fixtures/**/*.js'),
+            wimpOptions = {
+                concurrency: 3,
+                retryTests: true,
+                maxRetries: 3,
+                silent: true,
+                dontExit: true,
+                taskTimeout: 10000,
+                configPath: path.join(__dirname, '../example-wimp-config.js')
+            };
 
+        function callbackFunc (fn) {
+            var returnValue, called = false;
+            return function(err, fork) {
+                if (!called) {
+                    called = true;
+                    returnValue = fn.apply(this, arguments);
+                }
+                return returnValue;
+            };
+        }
 
+        before(function(done){
+            try {
+                spy = sinon.spy();
+                proxy = callbackFunc(spy);
+                fileStream = gulp.src(testsPath, { buffer: false } );
+                fileStream.addListener('data', function(){
+                    numberOfTestFiles += 1;
+                });
+                wimpOptions.callback = function(resultsByFile, forq) {
+                    results = resultsByFile;
+                    queue = forq;
+                    callbackArgs = arguments;
+                    proxy();
+                    done();
+                };
+                wimpStream = fileStream.pipe(wimp(wimpOptions));
+            } catch (e) {
+                done(e);
+            }
+        });
+
+        it("should retry no more tests than allowed by the retry limit", function(){
+            expect(queue.todo.length).to.eq( numberOfTestFiles + wimpOptions.maxRetries );
         });
 
     });
