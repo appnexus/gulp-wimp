@@ -84,7 +84,9 @@ function seleniumStartCallback (options, parentStream){
     var retryLogDenominator = maxRetries+0;
     var currentRetry = 0;
     var quit = options.quit || true;
-    console.log("Loading %s test suite files...", tasks.length);
+    if (options && !options.silent) {
+      console.log("Loading %s test suite files...", tasks.length);
+    }
     tasks.forEach(function(t){
       t.args.push(host);
       t.args.push(port);
@@ -122,13 +124,21 @@ function seleniumStartCallback (options, parentStream){
 
       if (failed) {
         // determine if tests passed on retries
+        if (options && !options.silent) {
           console.log(("FAILED: "+errors.length+" error"+ (errors.length > 1 ? "s" : "" ) + " encountered.").red);
-          callback(resultsByFile, F);
+        }
+        callback(resultsByFile, F);
+        if (options && !options.dontExit) {
           process.exit(1);
+        }
       } else {
-        console.log("SUCCESS: all tests finished without errors.".green);
+        if (options && !options.silent) {
+          console.log("SUCCESS: all tests finished without errors.".green);
+        }
         callback(null, F);
-        process.exit(0);
+        if (options && !options.dontExit) {
+          process.exit(0);
+        }
       }
     }
 
@@ -207,7 +217,9 @@ function seleniumStartCallback (options, parentStream){
       // if retryTest AND maxRetries are remaining AND no task with the same parentTaskForkId exists in queue already
       if ( retryTests && maxRetries > 0 && scheduledRetries.filter(function(t){ return t.parentTaskForkId === fork.id; }).length === 0 ) {
         // go ahead and schedule the retry
-        console.log("RETRYING: ".yellow.bold+'../'+_.last(testFileName.split('/')));
+        if (options && !options.silent) {
+          console.log("RETRYING: ".yellow.bold+'../'+_.last(testFileName.split('/')));
+        }
         // de/increment counters
         currentRetry += 1;
         maxRetries -= 1;
@@ -240,7 +252,9 @@ function launchSelenium (options, parentStream) {
         version: seleniumVersion,
         drivers: drivers,
         logger: function(message) {
-          console.log(message);
+          if (options && !options.silent) {
+            console.log(message);
+          }
         },
         progressCb: function(totalLength, progressLength, chunkLength) {
           // TODO

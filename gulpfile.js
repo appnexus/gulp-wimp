@@ -6,13 +6,13 @@ var wimp = require('./index');
 gulp.task('default', [ 'test' ]);
 
 gulp.task('lint', function(){
-  return gulp.src([ './tests/**/*.js', './index.js', './worker.js', './driver.js' ])
+  return gulp.src([ './examples/**/*.js', './index.js', './worker.js', './driver.js' ])
     .pipe(jshint())
     .pipe(jshint.reporter(stylish));
 });
 
-gulp.task('test', function () {
-  var s = gulp.src('tests/*.js', {read: false});
+gulp.task('examples', function () {
+  var s = gulp.src('examples/*.js', {read: false});
   s.pipe(
     wimp({
       concurrency: 3
