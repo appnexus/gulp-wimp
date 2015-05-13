@@ -1,6 +1,6 @@
 {
   "name": "gulp-wimp",
-  "version": "1.0.7",
+  "version": "0.0.1",
   "description": "gulp plugin for running selenium tests using WD and Mocha in parallel",
   "main": "index.js",
   "scripts": {
