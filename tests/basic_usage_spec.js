@@ -81,7 +81,7 @@ describe('Gulp WIMP when there are no failed tests', function(){
     });
 
     it('creates one task in the queue for each test file', function(){
-        expect(queue.todo.length).to.eq(numberOfTestFiles);
+        expect(queue.tasks.length).to.eq(numberOfTestFiles);
     });
 
     it("honors the concurrency limit in the queue passed in via options", function(){

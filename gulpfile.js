@@ -11,11 +11,26 @@ gulp.task('lint', function(){
     .pipe(jshint.reporter(stylish));
 });
 
-gulp.task('examples', function () {
-  var s = gulp.src('examples/*.js', {read: false});
+gulp.task('test', function(){
+    // TODO
+});
+
+gulp.task('passing-examples', function () {
+  var s = gulp.src('tests/fixtures/*.js', {read: false});
   s.pipe(
     wimp({
-      concurrency: 3
+      concurrency: 3,
+    })
+  );
+});
+
+gulp.task('failing-examples', function () {
+  var s = gulp.src('tests/fixtures/**/*.js', {read: false});
+  s.pipe(
+    wimp({
+      concurrency: 3,
+      retryTests: true,
+      maxRetries: 3
     })
   );
 });

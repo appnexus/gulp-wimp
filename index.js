@@ -7,7 +7,7 @@ var gulp = require('gulp');
 var through = require('through2');
 var seleniumStandalone = require('selenium-standalone');
 var Forq = require('forq');
-var tasks = [];
+var tasks;
 var scheduledRetries = [];
 var debug = require('debug')('gulp-wimp');
 var colors = require('colors');
@@ -213,7 +213,6 @@ function seleniumStartCallback (options, parentStream){
         };
       }
       resultsByFile[testFileName].errors.push(err);
-
       // if retryTest AND maxRetries are remaining AND no task with the same parentTaskForkId exists in queue already
       if ( retryTests && maxRetries > 0 && scheduledRetries.filter(function(t){ return t.parentTaskForkId === fork.id; }).length === 0 ) {
         // go ahead and schedule the retry
@@ -267,6 +266,7 @@ function launchSelenium (options, parentStream) {
 module.exports = function (options) {
   if (!options) { options = {}; }
   var chunks = [];
+  tasks = [];
   // process the file stream passed in by gulp
   var parentStream = through.obj(function(chunk, enc, cb) {
     var fileName = chunk.path || 'no-name';

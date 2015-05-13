@@ -6,11 +6,15 @@ var path = require('path');
 var _ = require('lodash');
 var Forq = require('forq');
 var sinon = require('sinon');
-var taskCounter = 0;
+var util = require('util');
+var fs = require('fs');
+
+var exampleTestsPath = path.join(__dirname, './fixtures/');
+var numberOfTestsExpectedToFail = fs.readdirSync(path.join(exampleTestsPath, 'error_raisers')).length;
 
 describe('Gulp WIMP when some tests fail', function(){
 
-    describe("And the tests have finished and retries are enabled", function(){
+    describe("And test retrying is enabled", function(){
 
         this.timeout(120000);
 
@@ -30,7 +34,7 @@ describe('Gulp WIMP when some tests fail', function(){
                 maxRetries: 3,
                 silent: true,
                 dontExit: true,
-                taskTimeout: 10000,
+                taskTimeout: 20000,
                 configPath: path.join(__dirname, '../example-wimp-config.js')
             };
 
@@ -85,17 +89,16 @@ describe('Gulp WIMP when some tests fail', function(){
         });
 
         it('creates one task in the queue todo list for each test file and one for each retry', function(){
-            taskCounter += (numberOfTestFiles + wimpOptions.maxRetries);
-            expect(queue.todo.length).to.eq(taskCounter);
+            expect(queue.tasks.length).to.eq( numberOfTestFiles + wimpOptions.maxRetries );
         });
 
-        it("honors the concurrency limit in the queue passed in via options", function(){
+        it('honors the concurrency limit in the queue passed in via options', function(){
             expect(queue.concurrencyLimit).to.eq(wimpOptions.concurrency);
         });
 
     });
 
-    describe("And the tests have finished and retries are disabled", function(){
+    describe("And test retrying is disabled", function(){
 
         this.timeout(120000);
 
@@ -114,7 +117,7 @@ describe('Gulp WIMP when some tests fail', function(){
                 retryTests: false,
                 silent: true,
                 dontExit: true,
-                taskTimeout: 10000,
+                taskTimeout: 20000,
                 configPath: path.join(__dirname, '../example-wimp-config.js')
             };
 
@@ -143,8 +146,18 @@ describe('Gulp WIMP when some tests fail', function(){
                     callbackArgs = arguments;
                     proxy();
                     done();
+                    
                 };
                 wimpStream = fileStream.pipe(wimp(wimpOptions));
+            } catch (e) {
+                done(e);
+            }
+        });
+
+        after(function(done){
+            try {
+                wimpStream.end();
+                done();
             } catch (e) {
                 done(e);
             }
@@ -169,12 +182,15 @@ describe('Gulp WIMP when some tests fail', function(){
         });
 
         it('creates one task in the queue todo list for each test file and one for each retry', function(){
-            taskCounter += numberOfTestFiles;
-            expect(queue.todo.length).to.eq(taskCounter);
+            expect(queue.tasks.length).to.eq(numberOfTestFiles);
         });
 
-        it("honors the concurrency limit in the queue passed in via options", function(){
+        it('honors the concurrency limit in the queue passed in via options', function(){
             expect(queue.concurrencyLimit).to.eq(wimpOptions.concurrency);
+        });
+
+        it('results object has one key for every failing test', function(){
+            expect(Object.keys(results).length).to.eq(numberOfTestsExpectedToFail);
         });
 
     });
