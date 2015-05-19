@@ -2,9 +2,9 @@
 Run Selenium WebDriver tests faster using parallel instances of Mocha.
 
 ## Build Status
-Branch  | Build Status | Version
-------- | ------------ | ----
- master | [![build status](https://travis-ci.org/appnexus/gulp-wimp.png?branch=master)](https://travis-ci.org/appnexus/gulp-wimp?branch=master)  | 0.0.1
+Branch  | Build Status | Code Climate | Version
+------- | ------------ | --------- | -----------
+ master | [![build status](https://travis-ci.org/appnexus/gulp-wimp.png?branch=master)](https://travis-ci.org/appnexus/gulp-wimp?branch=master)  | [![code climate](https://d3s6mut3hikguw.cloudfront.net/github/appnexus/gulp-wimp/badges/gpa.svg)](https://codeclimate.com/github/appnexus/gulp-wimp) | 0.0.1
 
 ## Install
 ```bash

@@ -6,7 +6,7 @@ var configPath = process.argv[6] !== 'null' ? process.argv[6] : null;
 var reporter = process.argv[7];
 var verbose = process.argv[8];
 var browserName = process.argv[9];
-var quit = process.argv[10] === 'true' ? true : false
+var quit = process.argv[10] === 'true' ? true : false;
 
 var Driver = require('./driver');
 var Mocha = require('mocha');
