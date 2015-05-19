@@ -1,6 +1,11 @@
 # gulp-wimp
 Run Selenium WebDriver tests faster using parallel instances of Mocha.
 
+## Build Status
+Branch  | Build Status | Version
+------- | ------------ | ----
+ master | [![build status](https://travis-ci.org/appnexus/gulp-wimp.png?branch=master)](https://travis-ci.org/appnexus/gulp-wimp?branch=master)  | 0.0.1
+
 ## Install
 ```bash
 npm install gulp-wimp
