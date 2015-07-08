@@ -18,7 +18,7 @@
     "jshint-stylish": "^1.0.1",
     "lodash": "^3.5.0",
     "mocha": "^2.1.0",
-    "selenium-standalone": "^4.4.0",
+    "selenium-standalone": "^4.5.3",
     "through2": "^0.6.3",
     "wd": "^0.3.11"
   },
