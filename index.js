@@ -25,7 +25,7 @@ var drivers = {
   }
 };
 
-var seleniumVersion = '2.45.0';
+var seleniumVersion = '2.46.0';
 
 function seleniumInstallCallback (options, parentStream) {
  return function(err) {
